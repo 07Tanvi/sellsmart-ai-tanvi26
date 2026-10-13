@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellSmart AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0fdf4;
+      color: #173b2a;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 18px #00000012;
+    }
+    h1 { color: #16834a; }
+    label { display: block; margin-top: 16px; font-weight: bold; }
+    input, textarea, select, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #cbd5ce;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #16834a;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f0fdf4;
+      border-radius: 8px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🛍️ SellSmart AI</h1>
+    <p>Create product descriptions for your small business with AI.</p>
+
+    <label for="product">Product name</label>
+    <input id="product" placeholder="e.g. Handmade candles">
+
+    <label for="details">Product details</label>
+    <textarea id="details" rows="3"
+      placeholder="Describe the product, its features and benefits"></textarea>
+
+    <label for="platform">Where will you sell it?</label>
+    <select id="platform">
+      <option>Instagram</option>
+      <option>Amazon</option>
+      <option>Etsy</option>
+      <option>WhatsApp</option>
+    </select>
+
+    <button id="generate">Generate with AI</button>
+    <div id="result">Your AI-generated description will appear here.</div>
+  </div>
+
+  <script>
+    document.getElementById("generate").addEventListener("click", async () => {
+      const product = document.getElementById("product").value.trim();
+      const details = document.getElementById("details").value.trim();
+      const platform = document.getElementById("platform").value;
+      const result = document.getElementById("result");
+
+      if (!product || !details) {
+        result.textContent = "Please enter the product name and details.";
+        return;
+      }
+
+      result.textContent = "Creating your description...";
+
+      try {
+        const response = await fetch("http://localhost:11434/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "qwen2.5:1.5b",
+            stream: false,
+            prompt: `You are a helpful small-business marketing assistant.
+Create a truthful, attractive product listing for ${platform}.
+Product: ${product}
+Details: ${details}
+Write a catchy title, a clear product description, and a short promotional caption. Do not invent product features.`
+          })
+        });
+
+        if (!response.ok) throw new Error("Ollama returned an error.");
+        const data = await response.json();
+        result.textContent = data.response;
+      } catch (error) {
+        result.textContent =
+          "Could not connect to Ollama. Make sure Ollama is running and the qwen2.5:1.5b model is installed.";
+      }
+    });
+  </script>
+</body>
+</html>
